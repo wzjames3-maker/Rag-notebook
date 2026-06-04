@@ -129,27 +129,22 @@ function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps)
   return null;
 }
 
+const ENTITY_COLORS: Record<string, string> = {
+  PERSON: "#f59e0b",
+  ORGANIZATION: "#3b82f6",
+  LOCATION: "#10b981",
+  CONCEPT: "#8b5cf6",
+  TECHNOLOGY: "#ec4899",
+  PRODUCT: "#ef4444",
+  EVENT: "#06b6d4",
+  OTHER: "#6b7280",
+};
+
 function nodeReducer(_node: string, data: Record<string, unknown>) {
   const res: Record<string, unknown> = { ...data };
+  res.type = "circle";
   const entityType = (data.entityType as string) ?? (data.type as string) ?? "OTHER";
-  switch (entityType) {
-    case "PERSON":
-      res.type = "diamond";
-      break;
-    case "ORGANIZATION":
-      res.type = "square";
-      break;
-    case "LOCATION":
-      res.type = "triangle";
-      break;
-    case "CONCEPT":
-    case "TECHNOLOGY":
-    case "PRODUCT":
-      res.type = "star";
-      break;
-    default:
-      res.type = "circle";
-  }
+  res.color = ENTITY_COLORS[entityType] ?? ENTITY_COLORS.OTHER;
   if (data.highlighted) {
     res.size = (Number(data.size) || 3) * 1.4;
     res.zIndex = 1;
