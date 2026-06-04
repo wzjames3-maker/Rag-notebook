@@ -46,7 +46,14 @@ function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps)
   const sigma = useSigma();
   const { reset: resetCamera } = useCamera();
   const registerEvents = useRegisterEvents();
-  const { assign: assignLayout } = useLayoutForceAtlas2({ iterations: 100 });
+  const { assign: assignLayout } = useLayoutForceAtlas2({
+    iterations: 300,
+    settings: {
+      scalingRatio: 20,
+      gravity: 1,
+      strongGravityMode: true,
+    },
+  });
   const userKeyRef = useRef<string>("default");
   const graphRef = useRef<Graph | null>(null);
 
@@ -65,14 +72,26 @@ function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps)
     graphRef.current = graph;
     const cached = getPositionCache(userKeyRef.current);
 
-    for (const node of graphData.nodes) {
+    const N = graphData.nodes.length;
+    const radius = N > 0 ? Math.max(200, N * 30) : 200;
+    graphData.nodes.forEach((node, i) => {
       const saved = cached[node.key];
+      let x: number;
+      let y: number;
+      if (saved) {
+        x = saved.x;
+        y = saved.y;
+      } else {
+        const angle = (2 * Math.PI * i) / Math.max(N, 1);
+        x = radius * Math.cos(angle);
+        y = radius * Math.sin(angle);
+      }
       graph.addNode(node.key, {
         ...node.attributes,
-        x: saved?.x ?? Math.random() * 100,
-        y: saved?.y ?? Math.random() * 100,
+        x,
+        y,
       });
-    }
+    });
     for (const edge of graphData.edges) {
       try {
         graph.addEdgeWithKey(edge.key, edge.source, edge.target, edge.attributes);
@@ -84,8 +103,13 @@ function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps)
 
     const t = setTimeout(() => {
       assignLayout();
-      resetCamera({ duration: 200 });
+      sigma.refresh();
+      const t2 = setTimeout(() => {
+        resetCamera({ duration: 300 });
+      }, 100);
+      cleanupTimers.push(t2);
     }, 50);
+    const cleanupTimers: ReturnType<typeof setTimeout>[] = [t];
 
     const saveInterval = setInterval(() => {
       const positions: Record<string, { x: number; y: number }> = {};
@@ -100,7 +124,7 @@ function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps)
     }, 5000);
 
     return () => {
-      clearTimeout(t);
+      cleanupTimers.forEach(clearTimeout);
       clearInterval(saveInterval);
     };
   }, [graphData, loadGraph, assignLayout, resetCamera]);
