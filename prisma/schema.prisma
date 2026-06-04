@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum NoteCategory {
+  WORK
+  STUDY
+  LIFE
+  PROJECT
+}
+
+enum DocStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  avatar    String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notes      Note[]
+  sessions   ChatSession[]
+  documents  KnowledgeDocument[]
+  chunks     KnowledgeChunk[]
+
+  graphEntities      GraphEntity[]
+  graphRelationships GraphRelationship[]
+  graphCommunities   GraphCommunity[]
+  graphReports       GraphCommunityReport[]
+  graphJobs          GraphBuildJob[]
+}
+
+model Note {
+  id        String        @id @default(uuid())
+  userId    String
+  title     String
+  content   String
+  category  NoteCategory  @default(WORK)
+  tags      String[]
+  deletedAt DateTime?
+  embedding Unsupported("vector(1024)")?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, deletedAt])
+  @@index([userId, category])
+}
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id])
+  messages ChatMessage[]
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid())
+  sessionId String
+  role      MessageRole
+  content   String
+  sources   Json?
+  toolCalls Json?
+  createdAt DateTime    @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
+
+model KnowledgeDocument {
+  id         String    @id @default(uuid())
+  userId     String
+  filename   String
+  mimeType   String
+  md5        String
+  chunkCount    Int       @default(0)
+  status        DocStatus @default(PROCESSING)
+  graphIndexed  Boolean   @default(false)
+  graphIndexing Boolean   @default(false)
+  graphError    String?
+  graphIndexedAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  user   User             @relation(fields: [userId], references: [id])
+  chunks KnowledgeChunk[]
+
+  @@unique([userId, md5])
+  @@index([userId])
+}
+
+model KnowledgeChunk {
+  id         String @id @default(uuid())
+  documentId String
+  userId     String
+  content    String
+  metadata   Json?
+  chunkIndex Int
+  embedding  Unsupported("vector(1024)")?
+
+  document KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User              @relation(fields: [userId], references: [id])
+
+  @@index([documentId])
+  @@index([userId])
+}
+
+model GraphEntity {
+  id          String   @id @default(uuid())
+  userId      String
+  documentId  String?
+  name        String
+  type        String?
+  description String
+  degree      Int      @default(0)
+  communityId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  embedding     Unsupported("vector(1024)")?
+
+  user          User                @relation(fields: [userId], references: [id])
+  relationships GraphRelationship[] @relation("sourceEntity")
+  targetRels    GraphRelationship[] @relation("targetEntity")
+  community     GraphCommunity?     @relation(fields: [communityId], references: [id])
+
+  @@index([userId])
+  @@index([userId, name])
+  @@index([userId, type])
+  @@index([userId, communityId])
+}
+
+model GraphRelationship {
+  id             String   @id @default(uuid())
+  userId         String
+  sourceEntityId String
+  targetEntityId String
+  type           String?
+  description    String?
+  weight         Float    @default(1.0)
+  sourceChunkId  String?
+  createdAt      DateTime @default(now())
+
+  user         User        @relation(fields: [userId], references: [id])
+  sourceEntity GraphEntity @relation("sourceEntity", fields: [sourceEntityId], references: [id], onDelete: Cascade)
+  targetEntity GraphEntity @relation("targetEntity", fields: [targetEntityId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sourceEntityId])
+  @@index([targetEntityId])
+}
+
+model GraphCommunity {
+  id        String   @id @default(uuid())
+  userId    String
+  level     Int
+  size      Int
+  parentId  String?
+  createdAt DateTime @default(now())
+
+  user     User                 @relation(fields: [userId], references: [id])
+  parent   GraphCommunity?      @relation("communityHierarchy", fields: [parentId], references: [id])
+  children GraphCommunity[]     @relation("communityHierarchy")
+  entities GraphEntity[]
+  reports  GraphCommunityReport[]
+
+  @@index([userId, level])
+}
+
+model GraphCommunityReport {
+  id          String   @id @default(uuid())
+  userId      String
+  communityId String   @unique
+  title       String
+  summary     String
+  keyFindings String[]
+  rating      Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  embedding Unsupported("vector(1024)")?
+
+  user      User           @relation(fields: [userId], references: [id])
+  community GraphCommunity @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model GraphBuildJob {
+  id          String    @id @default(uuid())
+  userId      String
+  scope       String
+  status      String    @default("running")
+  total       Int
+  completed   Int       @default(0)
+  failed      Int       @default(0)
+  currentDoc  String?
+  errorMsg    String?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+  @@index([userId, startedAt])
+}
