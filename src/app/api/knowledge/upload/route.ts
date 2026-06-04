@@ -47,6 +47,17 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const md5 = crypto.createHash("md5").update(buffer).digest("hex");
 
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+  if (!currentUser) {
+    return NextResponse.json(
+      { error: "SESSION_EXPIRED", message: "登录已过期，请重新登录" },
+      { status: 401 }
+    );
+  }
+
   const existing = await prisma.knowledgeDocument.findUnique({
     where: { userId_md5: { userId, md5 } },
   });

@@ -35,14 +35,14 @@ export async function vectorizeAndStore(
 
     const valueRows = chunks.map(
       (c, i) =>
-        Prisma.sql`(${chunkIds[i]}::uuid, ${`[${embeddings[i].join(",")}]`}::vector)`
+        Prisma.sql`(${chunkIds[i]}, ${`[${embeddings[i].join(",")}]`}::vector)`
     );
 
     await tx.$executeRaw`
       UPDATE "KnowledgeChunk" k
       SET embedding = v.embedding::vector
       FROM (VALUES ${Prisma.join(valueRows)}) AS v(id, embedding)
-      WHERE k.id = v.id
+      WHERE k.id = v.id::text
     `;
 
     await tx.knowledgeDocument.update({
