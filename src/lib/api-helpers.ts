@@ -21,11 +21,14 @@ export function setTestUserId(userId: string | null) {
   globalThis.__TEST_USER_ID__ = userId;
 }
 
-export function unauthorized() {
-  return NextResponse.json(
-    { error: "UNAUTHORIZED", message: "未登录或 session 过期" },
-    { status: 401 }
-  );
+export type AuthFailureReason = "NO_SESSION" | "STALE_SESSION";
+
+export function unauthorized(reason: AuthFailureReason = "NO_SESSION") {
+  const message =
+    reason === "STALE_SESSION"
+      ? "Session 指向的用户已不存在，请重新登录"
+      : "未登录或 session 过期";
+  return NextResponse.json({ error: "UNAUTHORIZED", reason, message }, { status: 401 });
 }
 
 export function notFound(message = "资源不存在") {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -47,6 +47,7 @@ interface UserProfile {
 export function Header() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const username = session?.user?.name ?? "用户";
   const email = session?.user?.email ?? "";
   const sessionAvatar = session?.user?.image;
@@ -66,6 +67,15 @@ export function Header() {
     setLoadingProfile(true);
     try {
       const res = await fetch("/api/user", { cache: "no-store" });
+      if (res.status === 401) {
+        const json = await res.json().catch(() => ({}));
+        if (json.reason === "STALE_SESSION") {
+          toast.error("Session 已失效，正在退出登录...");
+          await signOut({ callbackUrl: "/login?stale=1" });
+          return;
+        }
+        throw new Error("未登录");
+      }
       if (!res.ok) throw new Error("Failed to load profile");
       const json = await res.json();
       const data = json.data as UserProfile;
@@ -75,8 +85,9 @@ export function Header() {
         avatar: data.avatar ?? "",
         bio: data.bio ?? "",
       });
-    } catch {
-      toast.error("加载个人资料失败");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "加载个人资料失败";
+      toast.error(message);
     } finally {
       setLoadingProfile(false);
     }
@@ -87,6 +98,12 @@ export function Header() {
       loadProfile();
     }
   }, [open, profile, loadProfile]);
+
+  useEffect(() => {
+    if (searchParams.get("stale") === "1") {
+      toast.warning("Session 已过期，请重新登录", { duration: 4000 });
+    }
+  }, [searchParams]);
 
   const handleSave = useCallback(async () => {
     if (!form.username.trim()) {

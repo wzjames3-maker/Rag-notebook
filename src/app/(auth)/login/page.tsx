@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { AlertCircleIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,8 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const staleNotice = searchParams.get("stale") === "1";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -58,6 +61,17 @@ export default function LoginPage() {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {staleNotice && (
+            <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-50 dark:bg-amber-950/30 p-3 text-sm text-amber-900 dark:text-amber-200">
+              <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p className="font-medium">Session 已过期</p>
+                <p className="text-xs opacity-80 mt-0.5">
+                  您的登录状态已失效，请重新登录。
+                </p>
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="username">用户名或邮箱</Label>
             <Input

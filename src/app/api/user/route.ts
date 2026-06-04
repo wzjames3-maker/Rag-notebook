@@ -14,7 +14,7 @@ const updateSchema = z.object({
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  if (!userId) return unauthorized();
+  if (!userId) return unauthorized("NO_SESSION");
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -28,7 +28,7 @@ export async function GET() {
     },
   });
 
-  if (!user) return unauthorized();
+  if (!user) return unauthorized("STALE_SESSION");
 
   return NextResponse.json({ data: user });
 }
