@@ -38,6 +38,7 @@ export async function extractFromChunks(
     schema: ExtractionSchema,
     system: ENTITY_EXTRACTION_PROMPT,
     prompt: combinedText,
+    maxOutputTokens: 8192,
   });
 
   if (debug) {

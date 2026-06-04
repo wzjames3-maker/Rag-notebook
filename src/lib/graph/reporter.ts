@@ -51,6 +51,7 @@ export async function generateCommunityReports(
         schema: CommunitySummarySchema,
         system: COMMUNITY_SUMMARY_PROMPT,
         prompt: entityDescriptions,
+        maxOutputTokens: 8192,
       });
 
       if (debug) {
