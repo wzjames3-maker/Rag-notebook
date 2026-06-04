@@ -4,7 +4,6 @@ import {
   SigmaContainer,
   useLoadGraph,
   useRegisterEvents,
-  useCamera,
   useSigma,
 } from "@react-sigma/core";
 import { useLayoutForceAtlas2 } from "@react-sigma/layout-forceatlas2";
@@ -44,7 +43,6 @@ function savePositionCache(userKey: string, positions: Record<string, { x: numbe
 function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps) {
   const loadGraph = useLoadGraph();
   const sigma = useSigma();
-  const { reset: resetCamera } = useCamera();
   const registerEvents = useRegisterEvents();
   const { assign: assignLayout } = useLayoutForceAtlas2({
     iterations: 300,
@@ -101,12 +99,36 @@ function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps)
     }
     loadGraph(graph);
 
+    function fitCamera(): void {
+      const g = sigma.getGraph();
+      if (g.order === 0) return;
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      g.forEachNode((_key, attrs) => {
+        const nx = attrs.x as number;
+        const ny = attrs.y as number;
+        if (nx < minX) minX = nx;
+        if (nx > maxX) maxX = nx;
+        if (ny < minY) minY = ny;
+        if (ny > maxY) maxY = ny;
+      });
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const graphW = maxX - minX || 1;
+      const graphH = maxY - minY || 1;
+      const canvas = document.getElementById("sigma-container");
+      const canvasW = canvas?.clientWidth || 800;
+      const canvasH = canvas?.clientHeight || 600;
+      const ratio = Math.max(graphW / canvasW, graphH / canvasH) * 1.3;
+      sigma.getCamera().animate(
+        { x: cx, y: cy, ratio, angle: 0 },
+        { duration: 400 }
+      );
+    }
+
     const t = setTimeout(() => {
       assignLayout();
       sigma.refresh();
-      const t2 = setTimeout(() => {
-        resetCamera({ duration: 300 });
-      }, 100);
+      const t2 = setTimeout(fitCamera, 100);
       cleanupTimers.push(t2);
     }, 50);
     const cleanupTimers: ReturnType<typeof setTimeout>[] = [t];
@@ -127,7 +149,7 @@ function GraphContent({ graphData, onNodeClick, onNodeHover }: GraphCanvasProps)
       cleanupTimers.forEach(clearTimeout);
       clearInterval(saveInterval);
     };
-  }, [graphData, loadGraph, assignLayout, resetCamera]);
+  }, [graphData, loadGraph, assignLayout, sigma]);
 
   const handleClick = useCallback(
     (e: { node: string }) => {
@@ -190,7 +212,7 @@ export function GraphCanvas(props: GraphCanvasProps) {
           labelSize: 12,
           labelColor: { color: "#333" },
           zIndex: true,
-          autoRescale: true,
+          autoRescale: false,
         }}
       >
         <GraphContent {...props} />
