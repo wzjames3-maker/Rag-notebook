@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -154,10 +155,12 @@ export function Header() {
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>
-            <p className="font-medium">{username}</p>
-            <p className="text-xs text-muted-foreground truncate">{email}</p>
-          </DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>
+              <p className="font-medium">{username}</p>
+              <p className="text-xs text-muted-foreground truncate">{email}</p>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
             <UserIcon className="mr-2 h-4 w-4" />
