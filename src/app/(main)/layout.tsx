@@ -14,12 +14,10 @@ export default function MainLayout({
     <SessionProvider>
       <SidebarProvider>
         <div className="flex min-h-screen w-full">
-          {/* Desktop sidebar */}
           <div className="hidden lg:block">
             <AppSidebar />
           </div>
 
-          {/* Main content area */}
           <div className="flex flex-1 flex-col pb-14 lg:pb-0">
             <Header />
             <BuildProgressBanner />
@@ -29,7 +27,6 @@ export default function MainLayout({
           </div>
         </div>
 
-        {/* Mobile bottom nav */}
         <MobileNav />
       </SidebarProvider>
     </SessionProvider>

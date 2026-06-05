@@ -1,6 +1,6 @@
 "use client";
 
-import { entityTypeIcons } from "@/lib/graph/colors";
+import { ENTITY_COLORS, hexToRgba } from "@/lib/graph/colors";
 
 interface CommunityOption {
   id: string;
@@ -22,9 +22,9 @@ interface GraphLegendProps {
 }
 
 const COMMUNITY_COLORS = [
-  "#4E79A7", "#F28E2B", "#E15759", "#76B7B2",
-  "#59A14F", "#EDC948", "#B07AA1", "#FF9DA7",
-  "#9C755F", "#BAB0AC", "#86BCB6", "#8CD17D",
+  "#6366f1", "#f59e0b", "#22c55e", "#ec4899",
+  "#0ea5e9", "#a855f7", "#ef4444", "#14b8a6",
+  "#f97316", "#8b5cf6", "#06b6d4", "#84cc16",
 ];
 
 function getCommunityColor(id: string, allIds: CommunityOption[]): string {
@@ -33,38 +33,47 @@ function getCommunityColor(id: string, allIds: CommunityOption[]): string {
   return COMMUNITY_COLORS[idx % COMMUNITY_COLORS.length];
 }
 
-const ENTITY_TYPE_SHAPES: Record<string, string> = {
-  PERSON: "◆",
-  ORGANIZATION: "■",
-  LOCATION: "▲",
-  CONCEPT: "★",
-  EVENT: "★",
-  TECHNOLOGY: "★",
-  PRODUCT: "★",
-  OTHER: "●",
-};
+function NodeDot({ color }: { color: string }) {
+  return (
+    <span className="relative inline-flex items-center justify-center w-4 h-4 shrink-0">
+      <span
+        className="absolute inset-0 rounded-full"
+        style={{
+          backgroundColor: hexToRgba(color, 0.15),
+          boxShadow: `0 0 6px ${hexToRgba(color, 0.3)}`,
+        }}
+      />
+      <span
+        className="relative w-2 h-2 rounded-full"
+        style={{
+          backgroundColor: color,
+          boxShadow: `0 0 0 1.5px ${hexToRgba(color, 0.4)}`,
+        }}
+      />
+    </span>
+  );
+}
 
 export function GraphLegend({ communities, communityMap, entityTypes }: GraphLegendProps) {
   if (communities.length === 0 && entityTypes.length === 0) return null;
 
   return (
-    <div className="absolute bottom-3 left-3 max-w-[260px] rounded-md border bg-background/95 backdrop-blur p-3 text-xs space-y-3 shadow-sm">
+    <div className="absolute top-3 right-3 z-2 max-w-[260px] rounded-xl ring-1 ring-foreground/10 bg-card/95 backdrop-blur-md p-3.5 text-xs space-y-3 shadow-lg">
       {communities.length > 0 && (
         <div>
-          <div className="font-medium mb-1.5">社区</div>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            社区
+          </div>
+          <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
             {communities.slice(0, 12).map((c) => {
               const color = getCommunityColor(c.id, communities);
               const info = communityMap[c.id];
               return (
                 <div key={c.id} className="flex items-center gap-2 min-w-0">
-                  <span
-                    className="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="truncate">
+                  <NodeDot color={color} />
+                  <span className="truncate text-foreground/80">
                     {info?.title ?? c.title ?? `社区 ${c.id.slice(0, 6)}`}
-                    <span className="text-muted-foreground ml-1">({c.size})</span>
+                    <span className="text-muted-foreground/60 ml-1">({c.size})</span>
                   </span>
                 </div>
               );
@@ -75,13 +84,17 @@ export function GraphLegend({ communities, communityMap, entityTypes }: GraphLeg
 
       {entityTypes.length > 0 && (
         <div>
-          <div className="font-medium mb-1.5">实体类型</div>
-          <div className="flex flex-wrap gap-x-3 gap-y-1">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            实体类型
+          </div>
+          <div className="flex flex-wrap gap-1.5">
             {entityTypes.map((t) => (
-              <span key={t} className="flex items-center gap-1">
-                <span className="text-sm leading-none">{ENTITY_TYPE_SHAPES[t] ?? "●"}</span>
-                <span className="text-muted-foreground">{t}</span>
-                <span className="text-[10px]">{entityTypeIcons[t] ?? ""}</span>
+              <span
+                key={t}
+                className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+              >
+                <NodeDot color={ENTITY_COLORS[t] ?? ENTITY_COLORS.OTHER} />
+                {t}
               </span>
             ))}
           </div>

@@ -128,3 +128,10 @@
     @apply font-sans;
   }
 }
+
+/* Sigma.js container must fill its parent so canvas gets correct height */
+.sigma-container {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative;
+}

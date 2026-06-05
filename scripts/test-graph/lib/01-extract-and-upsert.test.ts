@@ -29,8 +29,8 @@ test("T1.1: extractAndUpsertDocument creates entities and relationships", async 
 
   assert.ok(result.entities >= 2, `Expected >= 2 entities, got ${result.entities}`);
   assert.ok(
-    result.relationships >= 1,
-    `Expected >= 1 relationship, got ${result.relationships}`
+    result.relations >= 1,
+    `Expected >= 1 relationship, got ${result.relations}`
   );
   assert.ok(Array.isArray(result.newEntityIds), "newEntityIds must be array");
   assert.ok(result.newEntityIds.length > 0, "Should have at least one new entity id");

@@ -38,7 +38,7 @@ src/
 - **@ai-sdk/react NOT installed** — no `useChat` hook. Chat frontend uses native `fetch` + manual SSE parser. Do not import from `@ai-sdk/react`.
 - **shadcn v4 uses @base-ui/react** — NOT Radix. `Button` does NOT support `asChild`.
 - **NextAuth v5 beta** — uses Next.js 16 `proxy` import path, not `middleware`. Verify import paths.
-- **No tests** — project has no test framework configured.
+- **No automated tests** — no test framework configured. Manual E2E flow in `docs/GRAPH_TESTING.md`.
 - **Zod ~4.4.3** — code uses v3 API (`z.string().min(1)`). Zod v4 compat layer works; do not upgrade to v5.
 - **All DB queries must filter by userId** — data isolation from `getCurrentUserId()`.
 
@@ -91,10 +91,12 @@ build   → extractAndUpsertDocument() [per doc] → recomputeCommunities() [onc
 
 | File | Content |
 |---|---|
-| `docs/IMPLEMENTATION_PLAN.md` | Master plan, 11 steps |
-| `docs/API_DESIGN.md` | 18 API endpoints |
-| `docs/REQUIREMENTS.md` | MVP checklist |
-| `docs/TECH_STACK.md` | Tech stack (note: says Radix, actually @base-ui/react) |
+| `docs/MVP实施计划.md` | Master plan, 11 steps |
+| `docs/API设计.md` | 18 API endpoints |
+| `docs/需求文档.md` | MVP checklist |
+| `docs/技术选型.md` | Tech stack |
+| `docs/RAG_FLOW.md` | RAG / GraphRAG / 图谱流程图 |
+| `docs/GRAPH_TESTING.md` | 7 步手测流程 + 自动化检查 |
 
 ## Recurring Conventions
 

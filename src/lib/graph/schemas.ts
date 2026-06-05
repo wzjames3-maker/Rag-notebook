@@ -15,8 +15,12 @@ export const RelationshipSchema = z.object({
 
 export const ExtractionSchema = z.object({
   entities: z.array(EntitySchema),
-  relationships: z.array(RelationshipSchema),
-});
+  relations: z.array(RelationshipSchema).optional(),
+  relationships: z.array(RelationshipSchema).optional(),
+}).transform((data) => ({
+  entities: data.entities,
+  relations: data.relations ?? data.relationships ?? [],
+}));
 
 export const FindingSchema = z.object({
   finding: z.string().describe("关键发现"),

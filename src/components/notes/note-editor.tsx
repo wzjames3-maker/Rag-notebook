@@ -32,7 +32,6 @@ function EditorInner({ defaultValue, onChange }: MilkdownEditorProps) {
     [defaultValue]
   );
 
-  // Poll for content changes
   useEffect(() => {
     const interval = setInterval(() => {
       const editor = get();
@@ -50,7 +49,6 @@ function EditorInner({ defaultValue, onChange }: MilkdownEditorProps) {
           onChangeRef.current(content);
         }
       } catch {
-        // Editor not ready yet
       }
     }, 1000);
 

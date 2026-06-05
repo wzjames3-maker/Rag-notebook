@@ -40,7 +40,6 @@ export default function NoteEditorPage() {
   const contentRef = useRef("");
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch note
   useEffect(() => {
     async function fetchNote() {
       try {
@@ -64,7 +63,6 @@ export default function NoteEditorPage() {
     fetchNote();
   }, [noteId, router]);
 
-  // Auto-save with debounce
   const saveNote = useCallback(async () => {
     if (!note) return;
     setSaving(true);
@@ -91,7 +89,6 @@ export default function NoteEditorPage() {
     }
   }, [note, noteId]);
 
-  // Trigger auto-save on content change
   const handleContentChange = useCallback((content: string) => {
     contentRef.current = content;
     setSaveStatus("unsaved");
@@ -104,7 +101,6 @@ export default function NoteEditorPage() {
     }, 1500);
   }, [saveNote]);
 
-  // Cleanup timer
   useEffect(() => {
     return () => {
       if (autoSaveTimerRef.current) {
@@ -113,7 +109,6 @@ export default function NoteEditorPage() {
     };
   }, []);
 
-  // Update title
   async function handleTitleChange(title: string) {
     setNote((prev) => prev ? { ...prev, title } : null);
     setSaveStatus("unsaved");
@@ -126,7 +121,6 @@ export default function NoteEditorPage() {
     }, 1500);
   }
 
-  // Update category
   async function handleCategoryChange(category: string | null) {
     if (!category) return;
     setNote((prev) => prev ? { ...prev, category } : null);
@@ -140,14 +134,12 @@ export default function NoteEditorPage() {
     }, 1500);
   }
 
-  // Delete note
   async function handleDelete() {
     try {
       const res = await fetch(`/api/notes/${noteId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
       router.push("/notes");
     } catch {
-      // Error handled by toast
     }
   }
 
@@ -165,7 +157,6 @@ export default function NoteEditorPage() {
 
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
-      {/* Toolbar */}
       <div className="flex items-center justify-between gap-4">
         <Button variant="ghost" size="sm" onClick={() => router.push("/notes")}>
           <ArrowLeftIcon className="mr-1.5 h-4 w-4" />
@@ -199,7 +190,6 @@ export default function NoteEditorPage() {
         </div>
       </div>
 
-      {/* Title + Category */}
       <div className="flex items-start gap-4">
         <Input
           value={note.title}
@@ -220,7 +210,6 @@ export default function NoteEditorPage() {
         </Select>
       </div>
 
-      {/* Editor */}
       <div className="border rounded-lg min-h-[500px]">
         <NoteEditor
           defaultValue={note.content}

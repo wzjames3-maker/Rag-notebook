@@ -42,7 +42,6 @@ export default function NotesPage() {
   const searchRef = useRef("");
   const limit = 20;
 
-  // Fetch on category/search change
   useEffect(() => {
     let cancelled = false;
     pageRef.current = 1;
@@ -66,7 +65,6 @@ export default function NotesPage() {
           setTotal(json.total);
         }
       } catch {
-        // Error handled by toast in layout
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -78,7 +76,6 @@ export default function NotesPage() {
     };
   }, [category, search]);
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchInput);
@@ -86,7 +83,6 @@ export default function NotesPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Infinite scroll
   useEffect(() => {
     if (!loadMoreRef.current) return;
 
@@ -114,7 +110,6 @@ export default function NotesPage() {
             setNotes((prev) => [...prev, ...json.data]);
             pageRef.current = nextPage;
           } catch {
-            // Error handled by toast
           } finally {
             loadingMoreRef.current = false;
             setLoadingMore(false);
@@ -139,13 +134,11 @@ export default function NotesPage() {
       const json = await res.json();
       router.push(`/notes/${json.data.id}`);
     } catch {
-      // Error handled by toast
     }
   }
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">我的笔记</h1>
         <Button onClick={handleCreateNote} size="sm">
@@ -154,7 +147,6 @@ export default function NotesPage() {
         </Button>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-sm">
         <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -165,7 +157,6 @@ export default function NotesPage() {
         />
       </div>
 
-      {/* Category filter */}
       <Tabs value={category} onValueChange={setCategory}>
         <TabsList>
           {categories.map((cat) => (
@@ -176,7 +167,6 @@ export default function NotesPage() {
         </TabsList>
       </Tabs>
 
-      {/* Notes grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -203,7 +193,6 @@ export default function NotesPage() {
             ))}
           </div>
 
-          {/* Infinite scroll trigger */}
           <div ref={loadMoreRef} className="h-8">
             {loadingMore && (
               <div className="flex justify-center py-2">

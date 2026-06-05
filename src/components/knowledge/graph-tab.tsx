@@ -1,21 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { GraphControls } from "@/components/knowledge/graph-controls";
 import { NodeDetailPanel } from "@/components/knowledge/graph-node-detail";
 import { GraphLegend } from "@/components/knowledge/graph-legend";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { NetworkIcon, RefreshCwIcon, AlertCircleIcon } from "lucide-react";
+import { NetworkIcon, RefreshCwIcon, AlertCircleIcon, Loader2Icon } from "lucide-react";
 
 const GraphCanvas = dynamic(
   () => import("@/components/knowledge/graph-canvas").then((m) => m.GraphCanvas),
   {
     ssr: false,
     loading: () => (
-      <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
-        加载图谱中...
+      <div className="h-full flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+        <Loader2Icon className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p>加载图谱中...</p>
       </div>
     ),
   }
@@ -63,6 +63,7 @@ export function GraphTab() {
   const [stats, setStats] = useState<GraphStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [layoutKey, setLayoutKey] = useState(0);
   const [selectedNode, setSelectedNode] = useState<{
     id: string;
     label: string;
@@ -102,6 +103,42 @@ export function GraphTab() {
     loadAll();
   }, [loadAll]);
 
+  const filteredNodes = useMemo(() => {
+    if (!graphData) return [];
+    return graphData.nodes.filter((node) => {
+      if (filters.types.length > 0 && !filters.types.includes(node.attributes.entityType as string ?? node.attributes.type as string)) {
+        return false;
+      }
+      if (filters.community && node.attributes.communityId !== filters.community) {
+        return false;
+      }
+      if (
+        filters.search &&
+        !(node.attributes.label as string).toLowerCase().includes(filters.search.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [graphData, filters.types, filters.community, filters.search]);
+
+  const filteredNodeKeys = useMemo(
+    () => new Set(filteredNodes.map((n) => n.key)),
+    [filteredNodes]
+  );
+
+  const filteredEdges = useMemo(() => {
+    if (!graphData) return [];
+    return graphData.edges.filter(
+      (e) => filteredNodeKeys.has(e.source) && filteredNodeKeys.has(e.target)
+    );
+  }, [graphData, filteredNodeKeys]);
+
+  const canvasGraphData = useMemo(
+    () => ({ nodes: filteredNodes, edges: filteredEdges }),
+    [filteredNodes, filteredEdges]
+  );
+
   const handleNodeClick = (nodeId: string, nodeData: Record<string, unknown>) => {
     setSelectedNode({
       id: nodeId,
@@ -114,20 +151,30 @@ export function GraphTab() {
 
   if (loading && !graphData) {
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-[600px] w-full" />
+      <div className="h-[600px] flex flex-col items-center justify-center gap-4">
+        <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+          <Loader2Icon className="h-7 w-7 animate-spin text-muted-foreground" />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium">正在加载图谱</p>
+          <p className="text-xs text-muted-foreground">请稍候...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="h-[600px] flex flex-col items-center justify-center gap-3 text-sm">
-        <AlertCircleIcon className="h-10 w-10 text-destructive" />
-        <p className="text-destructive">{error}</p>
+      <div className="h-[600px] flex flex-col items-center justify-center gap-4">
+        <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center">
+          <AlertCircleIcon className="h-7 w-7 text-destructive" />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium text-destructive">加载失败</p>
+          <p className="text-xs text-muted-foreground">{error}</p>
+        </div>
         <Button variant="outline" size="sm" onClick={loadAll}>
-          <RefreshCwIcon className="h-4 w-4 mr-1" />
+          <RefreshCwIcon className="h-4 w-4 mr-1.5" />
           重试
         </Button>
       </div>
@@ -140,79 +187,67 @@ export function GraphTab() {
 
   if (graphData.stats.entityCount === 0) {
     return (
-      <div className="h-[600px] flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
-        <NetworkIcon className="h-12 w-12" />
-        <p className="font-medium text-foreground">暂无图谱数据</p>
-        <p className="text-xs">切换到「文档」tab 勾选已上传文档，启动增量构建</p>
+      <div className="h-[600px] flex flex-col items-center justify-center gap-4">
+        <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+          <NetworkIcon className="h-7 w-7 text-muted-foreground" />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium">暂无图谱数据</p>
+          <p className="text-xs text-muted-foreground">切换到「文档」tab 勾选已上传文档，启动增量构建</p>
+        </div>
         <Button variant="outline" size="sm" onClick={loadAll}>
-          <RefreshCwIcon className="h-4 w-4 mr-1" />
+          <RefreshCwIcon className="h-4 w-4 mr-1.5" />
           刷新
         </Button>
       </div>
     );
   }
 
-  const filteredNodes = graphData.nodes.filter((node) => {
-    if (filters.types.length > 0 && !filters.types.includes(node.attributes.entityType as string ?? node.attributes.type as string)) {
-      return false;
-    }
-    if (filters.community && node.attributes.communityId !== filters.community) {
-      return false;
-    }
-    if (
-      filters.search &&
-      !(node.attributes.label as string).toLowerCase().includes(filters.search.toLowerCase())
-    ) {
-      return false;
-    }
-    return true;
-  });
-
-  const filteredNodeKeys = new Set(filteredNodes.map((n) => n.key));
-  const filteredEdges = graphData.edges.filter(
-    (e) => filteredNodeKeys.has(e.source) && filteredNodeKeys.has(e.target)
-  );
-
   const allCommunities = stats.communities;
   const allEntityTypes = stats.entityTypes;
 
   return (
-    <div className="space-y-3">
-      <div className="border rounded-lg flex flex-col h-[calc(100vh-18rem)]">
-        <GraphControls
-          filters={filters}
-          onChange={setFilters}
-          entityTypes={allEntityTypes}
-          communities={allCommunities}
-          stats={graphData.stats}
-          onRefresh={loadAll}
-        />
+    <div className="rounded-xl ring-1 ring-foreground/10 flex flex-col h-full bg-card overflow-hidden">
+      <GraphControls
+        filters={filters}
+        onChange={setFilters}
+        entityTypes={allEntityTypes}
+        communities={allCommunities}
+        stats={graphData.stats}
+        onRefresh={loadAll}
+        onResetLayout={() => {
+          Object.keys(localStorage)
+            .filter((key) => key.startsWith("graph-pos-"))
+            .forEach((key) => localStorage.removeItem(key));
+          setLayoutKey((k) => k + 1);
+        }}
+      />
 
-        <div className="flex flex-1 min-h-0">
-          <div className={`flex-1 relative ${selectedNode ? "border-r" : ""}`}>
-            <GraphCanvas
-              graphData={{ nodes: filteredNodes, edges: filteredEdges }}
-              onNodeClick={handleNodeClick}
-            />
-            <GraphLegend
-              communities={allCommunities}
-              communityMap={graphData.communityMap}
-              entityTypes={allEntityTypes}
-            />
-          </div>
-
-          {selectedNode && (
-            <NodeDetailPanel
-              node={selectedNode}
-              communityInfo={
-                selectedNode.communityId
-                  ? graphData.communityMap[selectedNode.communityId] ?? null
-                  : null
-              }
-              onClose={() => setSelectedNode(null)}
-            />
-          )}
+      <div className="flex flex-1 min-h-0">
+        <div className={`flex-1 relative flex flex-col min-h-0 ${selectedNode ? "border-r" : ""}`}>
+          <GraphCanvas
+            key={layoutKey}
+            graphData={canvasGraphData}
+            onNodeClick={handleNodeClick}
+          />
+          <GraphLegend
+            communities={allCommunities}
+            communityMap={graphData.communityMap}
+            entityTypes={allEntityTypes}
+          />
         </div>
+
+        {selectedNode && (
+          <NodeDetailPanel
+            node={selectedNode}
+            communityInfo={
+              selectedNode.communityId
+                ? graphData.communityMap[selectedNode.communityId] ?? null
+                : null
+            }
+            onClose={() => setSelectedNode(null)}
+          />
+        )}
       </div>
     </div>
   );

@@ -120,7 +120,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A["/knowledge/graph"] --> B["GET /api/knowledge/graph-data"]
+    A["/knowledge/graph"] --> B["GET /api/knowledge/graph\nGET /api/knowledge/graph/stats"]
     B --> C["(GraphEntity\nGraphRelationship\nGraphCommunity)"]
     C --> D["返回 nodes + edges + stats"]
     D --> E["GraphCanvas\nsigma.js + ForceAtlas2"]

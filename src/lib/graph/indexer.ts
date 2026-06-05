@@ -6,7 +6,7 @@ import { generateCommunityReports } from "./reporter";
 
 export interface ExtractAndUpsertResult {
   entities: number;
-  relationships: number;
+  relations: number;
   newEntityIds: string[];
 }
 
@@ -70,7 +70,7 @@ export async function extractAndUpsertDocument(
     }
 
     let skippedRels = 0;
-    for (const rel of extraction.relationships) {
+    for (const rel of extraction.relations) {
       const sourceId = entityIdMap.get(rel.sourceName);
       const targetId = entityIdMap.get(rel.targetName);
       if (!sourceId || !targetId) {
@@ -109,7 +109,7 @@ export async function extractAndUpsertDocument(
 
     if (skippedRels > 0) {
       console.warn(
-        `[Graph Indexer] Skipped ${skippedRels} relationships in document ${documentId} due to missing entity references`,
+        `[Graph Indexer] Skipped ${skippedRels} relations in document ${documentId} due to missing entity references`,
       );
     }
 
@@ -133,7 +133,7 @@ export async function extractAndUpsertDocument(
 
     return {
       entities: extraction.entities.length,
-      relationships: extraction.relationships.length,
+      relations: extraction.relations.length,
       newEntityIds,
     };
   } catch (err) {

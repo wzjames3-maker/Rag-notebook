@@ -4,7 +4,7 @@
 
 ```bash
 docker-compose up -d                # PostgreSQL + pgvector
-npx prisma migrate dev             # 应用迁移（含 GraphBuildJob 表）
+npx prisma migrate deploy          # 应用迁移（含 GraphBuildJob 表）
 npx next dev -p 3000                # 启动开发服务器
 ```
 
@@ -27,7 +27,7 @@ npx next dev -p 3000                # 启动开发服务器
 ### 3. 图谱可视化
 
 1. 切到「图谱」tab
-2. 预期：节点加载完成；左下角出现 legend（社区色块 + 实体类型）
+2. 预期：节点加载完成；右上角出现 legend（社区色块 + 实体类型）
 3. 点任一节点：右侧出现详情面板，显示名称、类型、所属社区（带 title 和 summary）、描述
 4. 切换实体类型下拉：节点过滤
 5. 切换社区下拉：节点过滤
@@ -75,7 +75,7 @@ npx tsc --noEmit
 npx next build
 ```
 
-预期：0 错误，构建成功，routes 数 = 23。
+预期：0 错误，构建成功，routes 数 = 25。
 
 ## 关键 API 路由
 

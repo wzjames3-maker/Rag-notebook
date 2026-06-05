@@ -43,7 +43,6 @@ export default function TrashPage() {
         const json = await res.json();
         if (!cancelled) setNotes(json.data);
       } catch {
-        // Error handled by toast
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -58,7 +57,6 @@ export default function TrashPage() {
       if (!res.ok) throw new Error("Failed to restore");
       setNotes((prev) => prev.filter((n) => n.id !== id));
     } catch {
-      // Error handled by toast
     }
   }
 
@@ -69,7 +67,6 @@ export default function TrashPage() {
       setNotes((prev) => prev.filter((n) => n.id !== id));
       setDeleteId(null);
     } catch {
-      // Error handled by toast
     }
   }
 
@@ -134,7 +131,6 @@ export default function TrashPage() {
         </div>
       )}
 
-      {/* Confirm delete dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

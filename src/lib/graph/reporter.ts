@@ -52,6 +52,8 @@ export async function generateCommunityReports(
         system: COMMUNITY_SUMMARY_PROMPT,
         prompt: entityDescriptions,
         maxOutputTokens: 8192,
+        maxRetries: 2,
+        timeout: 120_000,
       });
 
       if (debug) {

@@ -88,7 +88,8 @@ export async function POST(req: Request) {
       total: docs.length,
     });
 
-    void (async () => {
+    const CONCURRENCY = 3;
+    const runBuildJob = async () => {
       let affectedEntityIds: string[] = [];
 
       try {
@@ -110,30 +111,49 @@ export async function POST(req: Request) {
           ]);
         }
 
-        for (const doc of docs) {
-          try {
-            const result = await extractAndUpsertDocument(doc.id, userId);
-            affectedEntityIds.push(...result.newEntityIds);
-            await advanceJob(job.id, doc.filename, false);
-          } catch (err) {
-            console.error(`[Graph Build] Failed to index ${doc.id}:`, err);
-            await advanceJob(job.id, doc.filename, true);
+        for (let i = 0; i < docs.length; i += CONCURRENCY) {
+          const batch = docs.slice(i, i + CONCURRENCY);
+          const results = await Promise.allSettled(
+            batch.map(async (doc) => {
+              try {
+                const result = await extractAndUpsertDocument(doc.id, userId);
+                await advanceJob(job.id, doc.filename, false);
+                return result;
+              } catch (err) {
+                console.error(`[Graph Build] Failed to index ${doc.id}:`, err);
+                await advanceJob(job.id, doc.filename, true);
+                return null;
+              }
+            })
+          );
+          for (const r of results) {
+            if (r.status === "fulfilled" && r.value) {
+              affectedEntityIds.push(...r.value.newEntityIds);
+            }
           }
         }
 
         if (affectedEntityIds.length > 0 || scope === "rebuild") {
-          await recomputeCommunities(userId, {
-            onlyAffectedEntityIds: scope === "incremental" ? affectedEntityIds : undefined,
-          });
+          try {
+            await recomputeCommunities(userId, {
+              onlyAffectedEntityIds: scope === "incremental" ? affectedEntityIds : undefined,
+            });
+          } catch (err) {
+            console.error(`[Graph Build] recomputeCommunities failed:`, err);
+          }
         }
 
         await finishJob(job.id, "completed");
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
         console.error(`[Graph Build] Job ${job.id} failed:`, err);
-        await finishJob(job.id, "failed", errorMsg);
+        await finishJob(job.id, "failed", errorMsg).catch(() => {});
       }
-    })();
+    };
+
+    runBuildJob().catch((err) => {
+      console.error(`[Graph Build] Unhandled job error:`, err);
+    });
 
     return NextResponse.json({
       status: "processing",

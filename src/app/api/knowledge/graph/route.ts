@@ -51,6 +51,11 @@ export async function GET() {
     if (e.type) entityTypeSet.add(e.type);
   }
 
+  const entityColorMap: Record<string, string> = {};
+  for (const e of entities) {
+    entityColorMap[e.id] = communityColorMap[e.communityId ?? ""] ?? "#999";
+  }
+
   return NextResponse.json({
     nodes: entities.map((e) => ({
       key: e.id,
@@ -62,7 +67,6 @@ export async function GET() {
         degree: e.degree,
         communityId: e.communityId,
         size: Math.max(3, Math.min(20, (e.degree || 1) * 2)),
-        color: communityColorMap[e.communityId ?? ""] ?? "#999",
       },
     })),
     edges: relationships.map((r) => ({
@@ -73,8 +77,7 @@ export async function GET() {
         label: r.type ?? "RELATED_TO",
         description: r.description,
         weight: r.weight,
-        size: Math.max(1, r.weight / 3),
-        color: "#ccc",
+        sourceColor: entityColorMap[r.sourceEntityId] ?? "#999",
       },
     })),
     stats: {

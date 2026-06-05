@@ -49,7 +49,6 @@ export function useBuildProgress(onCompleted?: () => void) {
           setDismissed(false);
         }
       } catch {
-        // network blip, retry
       }
     }
 

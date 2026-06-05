@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
+    "dev:turbo": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:graph": "tsx --env-file=.env.local scripts/test-graph/run.ts"
+    "test:graph": "tsx --env-file=.env.local scripts/test-graph/run.ts",
+    "postinstall": "node scripts/postinstall.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.67",
@@ -70,5 +72,8 @@
       "prisma",
       "@prisma/engines"
     ]
+  },
+  "optionalDependencies": {
+    "lightningcss-win32-x64-msvc": "^1.32.0"
   }
 }

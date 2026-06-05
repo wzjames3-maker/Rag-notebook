@@ -1,9 +1,21 @@
 allowBuilds:
+  /: true
+  '@': true
   '@prisma/engines': set this to true or false
+  a: true
+  e: true
+  g: true
+  i: true
+  m: true
   msw: set this to true or false
+  n: true
+  p: true
   prisma: set this to true or false
+  r: true
+  s: true
   sharp: set this to true or false
   unrs-resolver: set this to true or false
+confirmModulesPurge: false
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

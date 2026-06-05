@@ -67,7 +67,6 @@ function KnowledgePageContent() {
       const json = await res.json();
       setDocuments(json.data);
     } catch {
-      // handled silently
     } finally {
       setLoading(false);
     }
@@ -111,12 +110,13 @@ function KnowledgePageContent() {
       toast.success(json.message ?? "全量重建已启动");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "全量重建失败");
+    } finally {
       setRebuilding(false);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
+    <div className="max-w-7xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">知识库</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -124,14 +124,14 @@ function KnowledgePageContent() {
         </p>
       </div>
 
-      <Tabs value={tab} onValueChange={onTabChange}>
+      <Tabs value={tab} onValueChange={onTabChange} className="flex-1 min-h-0">
         <TabsList>
           <TabsTrigger value="docs">文档</TabsTrigger>
           <TabsTrigger value="graph">图谱</TabsTrigger>
           <TabsTrigger value="stats">统计</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="docs" className="space-y-4">
+        <TabsContent value="docs" className="space-y-4 min-h-0 overflow-y-auto flex flex-col">
           <div className="grid lg:grid-cols-[320px,1fr] gap-6">
             <div className="space-y-3">
               <FileUpload onUploaded={loadDocuments} />
@@ -217,11 +217,11 @@ function KnowledgePageContent() {
           </div>
         </TabsContent>
 
-        <TabsContent value="graph">
+        <TabsContent value="graph" className="mt-0 min-h-0 overflow-hidden flex flex-col">
           <GraphTab />
         </TabsContent>
 
-        <TabsContent value="stats" className="space-y-3">
+        <TabsContent value="stats" className="space-y-3 min-h-0 overflow-y-auto flex flex-col">
           <StatsTab documents={documents} />
         </TabsContent>
       </Tabs>

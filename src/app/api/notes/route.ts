@@ -27,7 +27,6 @@ export async function GET(req: Request) {
     deletedAt: null,
   };
 
-  // Stats mode
   if (stats === "true") {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -58,7 +57,6 @@ export async function GET(req: Request) {
     });
   }
 
-  // List mode
   const where: Record<string, unknown> = { ...baseWhere };
 
   if (category && Object.values(NoteCategory).includes(category as NoteCategory)) {
@@ -91,7 +89,6 @@ export async function GET(req: Request) {
     prisma.note.count({ where }),
   ]);
 
-  // Truncate content for list view
   const data = notes.map((note) => ({
     ...note,
     content: note.content.length > 200 ? note.content.slice(0, 200) : note.content,

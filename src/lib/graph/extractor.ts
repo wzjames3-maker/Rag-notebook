@@ -18,7 +18,7 @@ export interface ExtractedRelationship {
 
 export interface ExtractionResult {
   entities: ExtractedEntity[];
-  relationships: ExtractedRelationship[];
+  relations: ExtractedRelationship[];
 }
 
 export async function extractFromChunks(
@@ -39,6 +39,8 @@ export async function extractFromChunks(
     system: ENTITY_EXTRACTION_PROMPT,
     prompt: combinedText,
     maxOutputTokens: 8192,
+    maxRetries: 2,
+    timeout: 120_000,
   });
 
   if (debug) {
@@ -47,6 +49,6 @@ export async function extractFromChunks(
 
   return {
     entities: result.object.entities,
-    relationships: result.object.relationships,
+    relations: result.object.relations,
   };
 }
